@@ -1,0 +1,59 @@
+const axios = require('axios');
+const xml2js = require('xml2js');
+const cheerio = require('cheerio');
+const mongoose = require('mongoose');
+const Publication = require('./models/Publication');
+
+// MongoDB connection
+mongoose.connect('mongodb+srv://stanislasrolland05:Stan2005@r4c10.ravue.mongodb.net/', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
+
+// Fetch publications from DBLP
+async function fetchPublications() {
+  const url = 'https://dblp.org/search/publ/api?q=Laurent%20d%27Orazio&h=1000';
+  const response = await axios.get(url);
+  const parser = new xml2js.Parser();
+  const result = await parser.parseStringPromise(response.data);
+
+  const hits = result.result.hits[0].hit;
+  for (const hit of hits) {
+    const info = hit.info[0];
+    const authors = info.authors[0].author.map(author => ({
+      name: author._,
+      pid: author.$.pid
+    }));
+
+    const pages = info.pages ? info.pages[0] : info.volume ? info.volume[0] : null;
+
+    console.log("test"),
+    console.log(info);
+
+    const publication = new Publication({
+      title: info.title ? info.title[0] : null, // Handle missing title
+      authors: authors,
+      venue: info.venue ? info.venue[0] : null, // Handle missing venue
+      pages: pages, // Use pages or volume (already handled above)
+      year: info.year ? parseInt(info.year[0]) : null, // Handle missing year
+      type: info.type ? info.type[0] : null, // Handle missing type
+      access: info.access ? info.access[0] : null, // Handle missing access
+      key: info.key ? info.key[0] : null, // Handle missing key
+      doi: info.doi ? info.doi[0] : null,
+      ee: info.ee ? info.ee[0] : null,
+      url: info.url ? info.url[0] : null,
+    });
+
+    await publication.save();
+  }
+}
+
+fetchPublications().then(() => {
+  console.log('Publications fetched and saved to MongoDB');
+});
