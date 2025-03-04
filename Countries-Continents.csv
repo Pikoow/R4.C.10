@@ -19,6 +19,8 @@ Africa,Eritrea
 Africa,Ethiopia
 Africa,Gabon
 Africa,Gambia
+Africa,Gaza
+Africa,Gaza Strip
 Africa,Ghana
 Africa,Guinea
 Africa,Guinea-Bissau
@@ -76,6 +78,7 @@ Asia,Kuwait
 Asia,Kyrgyzstan
 Asia,Laos
 Asia,Lebanon
+Asia,Macau
 Asia,Malaysia
 Asia,Maldives
 Asia,Mongolia
@@ -109,7 +112,7 @@ Europe,Bosnia and Herzegovina
 Europe,Bulgaria
 Europe,Croatia
 Europe,Cyprus
-Europe,CZ
+Europe,Czechia
 Europe,Denmark
 Europe,Estonia
 Europe,Finland
@@ -131,6 +134,7 @@ Europe,Moldova
 Europe,Monaco
 Europe,Montenegro
 Europe,Netherlands
+Europe,North Macedonia
 Europe,Norway
 Europe,Poland
 Europe,Portugal
@@ -163,7 +167,7 @@ North America,Jamaica
 North America,Mexico
 North America,Nicaragua
 North America,Panama
-North America, Puerto Rico
+North America,Puerto Rico
 North America,Saint Kitts and Nevis
 North America,Saint Lucia
 North America,Saint Vincent and the Grenadines
