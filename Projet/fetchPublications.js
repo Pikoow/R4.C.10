@@ -4,7 +4,6 @@ const cheerio = require('cheerio');
 const mongoose = require('mongoose');
 const Publication = require('./models/Publication');
 
-// MongoDB connection
 mongoose.connect('mongodb+srv://stanislasrolland05:Stan2005@r4c10.ravue.mongodb.net/');
 
 const db = mongoose.connection;
@@ -13,7 +12,6 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-// Fetch publications from DBLP
 async function fetchPublications() {
   const url = 'https://dblp.org/search/publ/api?q=Laurent%20d%27Orazio&h=1000';
   const response = await axios.get(url);
@@ -30,24 +28,23 @@ async function fetchPublications() {
 
     const pages = info.pages ? info.pages[0] : info.volume ? info.volume[0] : null;
 
-    console.log("test"),
-    console.log(info);
+    if (info.type == "Conference and Workshop Papers" || info.type == "Journal Articles") {
+      const publication = new Publication({
+        title: info.title ? info.title[0] : null,
+        authors: authors,
+        venue: info.venue ? info.venue[0] : null,
+        pages: pages,
+        year: info.year ? parseInt(info.year[0]) : null,
+        type: info.type ? info.type[0] : null,
+        access: info.access ? info.access[0] : null,
+        key: info.key ? info.key[0] : null,
+        doi: info.doi ? info.doi[0] : null,
+        ee: info.ee ? info.ee[0] : null,
+        url: info.url ? info.url[0] : null,
+      });
 
-    const publication = new Publication({
-      title: info.title ? info.title[0] : null,
-      authors: authors,
-      venue: info.venue ? info.venue[0] : null,
-      pages: pages,
-      year: info.year ? parseInt(info.year[0]) : null,
-      type: info.type ? info.type[0] : null,
-      access: info.access ? info.access[0] : null,
-      key: info.key ? info.key[0] : null,
-      doi: info.doi ? info.doi[0] : null,
-      ee: info.ee ? info.ee[0] : null,
-      url: info.url ? info.url[0] : null,
-    });
-
-    await publication.save();
+      await publication.save();
+    }
   }
 }
 

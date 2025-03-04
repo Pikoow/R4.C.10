@@ -64,8 +64,26 @@
           row.appendChild(titleCell);
 
           const authorsCell = document.createElement('td');
-          authorsCell.textContent = pub.authors.map((author) => author.name).join(', ') || 'N/A';
-          row.appendChild(authorsCell);
+            if (pub.authors && pub.authors.length > 0) {
+              const authorLinks = pub.authors.map((author) => {
+                const link = document.createElement('a');
+                link.href = `https://dblp.org/pid/${author.pid}.html`; // Assuming the author page URL is based on author.pid
+                link.textContent = author.name;
+                link.target = '_blank'; // Open link in a new tab
+                return link;
+              });
+
+              // Append each author link with a comma separator
+              authorLinks.forEach((link, index) => {
+                authorsCell.appendChild(link);
+                if (index < authorLinks.length - 1) {
+                  authorsCell.appendChild(document.createTextNode(', '));
+                }
+              });
+            } else {
+              authorsCell.textContent = 'N/A';
+            }
+            row.appendChild(authorsCell);
 
           const venueCell = document.createElement('td');
           venueCell.textContent = pub.venue || 'N/A';
