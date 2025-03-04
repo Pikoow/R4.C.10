@@ -5,10 +5,7 @@ const mongoose = require('mongoose');
 const Publication = require('./models/Publication');
 
 // MongoDB connection
-mongoose.connect('mongodb+srv://stanislasrolland05:Stan2005@r4c10.ravue.mongodb.net/', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+mongoose.connect('mongodb+srv://stanislasrolland05:Stan2005@r4c10.ravue.mongodb.net/');
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -37,14 +34,14 @@ async function fetchPublications() {
     console.log(info);
 
     const publication = new Publication({
-      title: info.title ? info.title[0] : null, // Handle missing title
+      title: info.title ? info.title[0] : null,
       authors: authors,
-      venue: info.venue ? info.venue[0] : null, // Handle missing venue
-      pages: pages, // Use pages or volume (already handled above)
-      year: info.year ? parseInt(info.year[0]) : null, // Handle missing year
-      type: info.type ? info.type[0] : null, // Handle missing type
-      access: info.access ? info.access[0] : null, // Handle missing access
-      key: info.key ? info.key[0] : null, // Handle missing key
+      venue: info.venue ? info.venue[0] : null,
+      pages: pages,
+      year: info.year ? parseInt(info.year[0]) : null,
+      type: info.type ? info.type[0] : null,
+      access: info.access ? info.access[0] : null,
+      key: info.key ? info.key[0] : null,
       doi: info.doi ? info.doi[0] : null,
       ee: info.ee ? info.ee[0] : null,
       url: info.url ? info.url[0] : null,

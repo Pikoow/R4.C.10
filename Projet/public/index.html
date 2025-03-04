@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DBLP Publications</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <h1>DBLP Publications</h1>
+  <table id="publications-table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Authors</th>
+        <th>Venue</th>
+        <th>Year</th>
+        <th>Type</th>
+        <th>URL</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <script>
+    async function fetchPublications() {
+      try {
+        const response = await fetch('/api/publications');
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const publications = await response.json();
+
+        const tableBody = document.querySelector('#publications-table tbody');
+        tableBody.innerHTML = '';
+
+        publications.forEach((pub) => {
+          const row = document.createElement('tr');
+
+          const titleCell = document.createElement('td');
+          titleCell.textContent = pub.title || 'N/A';
+          row.appendChild(titleCell);
+
+          const authorsCell = document.createElement('td');
+          authorsCell.textContent = pub.authors.map((author) => author.name).join(', ') || 'N/A';
+          row.appendChild(authorsCell);
+
+          const venueCell = document.createElement('td');
+          venueCell.textContent = pub.venue || 'N/A';
+          row.appendChild(venueCell);
+
+          const yearCell = document.createElement('td');
+          yearCell.textContent = pub.year || 'N/A';
+          row.appendChild(yearCell);
+
+          const typeCell = document.createElement('td');
+          typeCell.textContent = pub.type || 'N/A';
+          row.appendChild(typeCell);
+
+          const urlCell = document.createElement('td');
+          if (pub.url) {
+            const link = document.createElement('a');
+            link.href = pub.url;
+            link.textContent = 'View';
+            link.target = '_blank';
+            urlCell.appendChild(link);
+          } else {
+            urlCell.textContent = 'N/A';
+          }
+          row.appendChild(urlCell);
+
+          tableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error fetching publications:', error);
+        alert('Failed to load publications. Please try again.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchPublications);
+  </script>
+</body>
+</html>
