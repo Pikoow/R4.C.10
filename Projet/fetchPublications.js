@@ -26,6 +26,23 @@ async function fetchPublications() {
       pid: author.$.pid
     }));
 
+    const irisaMembers = [];
+
+    for (const author of authors) {
+      const name = author.name;
+      const url = `https://dblp.org/search/author/api?q=${name}&h=1000`;
+      const response = await axios.get(url);
+      const parser = new xml2js.Parser();
+      const result = await parser.parseStringPromise(response.data);
+
+      const hits = result.result.hits[0].hit.info.notes[0].note;
+      if (hits.includes("IRISA") || hits.includes("irisa") || hits.includes("Irisa")) {
+        irisaMembers.push({name:author.name, pid:author.pid});
+      }
+    }
+
+    console.log(irisaMembers);
+
     const id = hit.$.id;
     const pages = info.pages ? info.pages[0] : info.volume ? info.volume[0] : null;
 
