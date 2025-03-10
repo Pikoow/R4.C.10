@@ -26,18 +26,18 @@ async function fetchPublications() {
       pid: author.$.pid
     }));
 
+    const id = hit.$.id;
     const pages = info.pages ? info.pages[0] : info.volume ? info.volume[0] : null;
 
     if (info.type == "Conference and Workshop Papers" || info.type == "Journal Articles") {
       const publication = new Publication({
+        iddblp: id,
         title: info.title ? info.title[0] : null,
         authors: authors,
         venue: info.venue ? info.venue[0] : null,
         pages: pages,
         year: info.year ? parseInt(info.year[0]) : null,
         type: info.type ? info.type[0] : null,
-        access: info.access ? info.access[0] : null,
-        key: info.key ? info.key[0] : null,
         doi: info.doi ? info.doi[0] : null,
         ee: info.ee ? info.ee[0] : null,
         url: info.url ? info.url[0] : null,
