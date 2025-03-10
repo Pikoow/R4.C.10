@@ -24,7 +24,7 @@ async function fetchPublications() {
     const authors = info.authors[0].author.map(author => ({
       name: author._,
       pid: author.$.pid
-    }));
+    })); 
 
     const irisaMembers = [];
 
