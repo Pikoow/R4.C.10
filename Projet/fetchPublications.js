@@ -1,6 +1,5 @@
 const axios = require('axios');
 const xml2js = require('xml2js');
-const cheerio = require('cheerio');
 const mongoose = require('mongoose');
 const Publication = require('./models/Publication');
 
@@ -12,42 +11,43 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-async function fetchPublications() {
-  const url = 'https://dblp.org/search/publ/api?q=Laurent%20d%27Orazio&h=1000';
+async function fetchPublicationsIrisa() {
+  const url = 'https://api.archives-ouvertes.fr/search/?q=structId_i:490899&wt=xml&rows=10';
   const response = await axios.get(url);
   const parser = new xml2js.Parser();
   const result = await parser.parseStringPromise(response.data);
 
-  const hits = result.result.hits[0].hit;
-  for (const hit of hits) {
-    const info = hit.info[0];
-    const authors = info.authors[0].author.map(author => ({
-      name: author._,
-      pid: author.$.pid
-    }));
+  const docs = result.response.result[0].doc;
 
-    const pages = info.pages ? info.pages[0] : info.volume ? info.volume[0] : null;
+  for (const doc of docs) {
+    const label = doc.str.find((str) => str.$.name === 'label_s')._;
+    const uri = doc.str.find((str) => str.$.name === 'uri_s')._;
+    const id = doc.str.find((str) => str.$.name === 'docid')._;
 
-    if (info.type == "Conference and Workshop Papers" || info.type == "Journal Articles") {
-      const publication = new Publication({
-        title: info.title ? info.title[0] : null,
-        authors: authors,
-        venue: info.venue ? info.venue[0] : null,
-        pages: pages,
-        year: info.year ? parseInt(info.year[0]) : null,
-        type: info.type ? info.type[0] : null,
-        access: info.access ? info.access[0] : null,
-        key: info.key ? info.key[0] : null,
-        doi: info.doi ? info.doi[0] : null,
-        ee: info.ee ? info.ee[0] : null,
-        url: info.url ? info.url[0] : null,
-      });
+    const [authorsPart, ...rest] = label.split('. ');
+    const authors = authorsPart.split(', ');
+    const title = rest[0];
 
-      await publication.save();
-    }
+    const parts = rest[1].split(', ');
+
+    const conference = parts[0];
+    const date = parts[1];
+    const location = parts.slice(2).join(', ');
+
+    const publication = new Publication({
+      title: title,
+      authors: authors,
+      conference: conference,
+      date: date,
+      location: location,
+      id: id,
+      uri: uri,
+    });
+
+    await publication.save();
   }
 }
 
-fetchPublications().then(() => {
+fetchPublicationsIrisa().then(() => {
   console.log('Publications fetched and saved to MongoDB');
 });
