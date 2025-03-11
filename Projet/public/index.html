@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DBLP Publications</title>
+  <title>IRISA Publications</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -25,19 +25,27 @@
     th {
       background-color: #f4f4f4;
     }
+    a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <h1>DBLP Publications</h1>
+  <h1>IRISA Publications</h1>
   <table id="publications-table">
     <thead>
       <tr>
         <th>Title</th>
         <th>Authors</th>
-        <th>Venue</th>
-        <th>Year</th>
         <th>Type</th>
-        <th>URL</th>
+        <th>Conference/Journal</th>
+        <th>Date</th>
+        <th>Location</th>
+        <th>URI</th>
       </tr>
     </thead>
     <tbody>
@@ -47,7 +55,7 @@
   <script>
     async function fetchPublications() {
       try {
-        const response = await fetch('/api/publications');
+        const response = await fetch('http://localhost:3000/api/publications');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -59,55 +67,52 @@
         publications.forEach((pub) => {
           const row = document.createElement('tr');
 
+          // Title
           const titleCell = document.createElement('td');
           titleCell.textContent = pub.title || 'N/A';
           row.appendChild(titleCell);
 
+          // Authors
           const authorsCell = document.createElement('td');
-            if (pub.authors && pub.authors.length > 0) {
-              const authorLinks = pub.authors.map((author) => {
-                const link = document.createElement('a');
-                link.href = `https://dblp.org/pid/${author.pid}.html`; // Assuming the author page URL is based on author.pid
-                link.textContent = author.name;
-                link.target = '_blank'; // Open link in a new tab
-                return link;
-              });
+          if (pub.authors && pub.authors.length > 0) {
+            authorsCell.textContent = pub.authors.join(', ');
+          } else {
+            authorsCell.textContent = 'N/A';
+          }
+          row.appendChild(authorsCell);
 
-              // Append each author link with a comma separator
-              authorLinks.forEach((link, index) => {
-                authorsCell.appendChild(link);
-                if (index < authorLinks.length - 1) {
-                  authorsCell.appendChild(document.createTextNode(', '));
-                }
-              });
-            } else {
-              authorsCell.textContent = 'N/A';
-            }
-            row.appendChild(authorsCell);
-
-          const venueCell = document.createElement('td');
-          venueCell.textContent = pub.venue || 'N/A';
-          row.appendChild(venueCell);
-
-          const yearCell = document.createElement('td');
-          yearCell.textContent = pub.year || 'N/A';
-          row.appendChild(yearCell);
-
+          // Type (e.g., article, inproceedings, phdthesis)
           const typeCell = document.createElement('td');
           typeCell.textContent = pub.type || 'N/A';
           row.appendChild(typeCell);
 
-          const urlCell = document.createElement('td');
-          if (pub.url) {
+          // Conference/Journal
+          const conferenceCell = document.createElement('td');
+          conferenceCell.textContent = pub.conference || pub.journal || 'N/A';
+          row.appendChild(conferenceCell);
+
+          // Date
+          const dateCell = document.createElement('td');
+          dateCell.textContent = pub.date || 'N/A';
+          row.appendChild(dateCell);
+
+          // Location
+          const locationCell = document.createElement('td');
+          locationCell.textContent = pub.location || 'N/A';
+          row.appendChild(locationCell);
+
+          // URI
+          const uriCell = document.createElement('td');
+          if (pub.uri) {
             const link = document.createElement('a');
-            link.href = pub.url;
+            link.href = pub.uri;
             link.textContent = 'View';
             link.target = '_blank';
-            urlCell.appendChild(link);
+            uriCell.appendChild(link);
           } else {
-            urlCell.textContent = 'N/A';
+            uriCell.textContent = 'N/A';
           }
-          row.appendChild(urlCell);
+          row.appendChild(uriCell);
 
           tableBody.appendChild(row);
         });

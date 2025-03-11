@@ -1,5 +1,5 @@
 const axios = require('axios');
-const xml2js = require('xml2js');
+const bibtexParse = require('bibtex-parse');
 const mongoose = require('mongoose');
 const Publication = require('./models/Publication');
 
@@ -12,36 +12,22 @@ db.once('open', () => {
 });
 
 async function fetchPublicationsIrisa() {
-  const url = 'https://api.archives-ouvertes.fr/search/?q=structId_i:490899&wt=xml&rows=10';
+  const url = 'https://api.archives-ouvertes.fr/search/?q=structId_i:490899&wt=bibtex&rows=10';
   const response = await axios.get(url);
-  const parser = new xml2js.Parser();
-  const result = await parser.parseStringPromise(response.data);
+  const bibtexData = response.data;
 
-  const docs = result.response.result[0].doc;
+  const parsedEntries = bibtexParse.entries(bibtexData);
 
-  for (const doc of docs) {
-    const label = doc.str.find((str) => str.$.name === 'label_s')._;
-    const uri = doc.str.find((str) => str.$.name === 'uri_s')._;
-    const id = doc.str.find((str) => str.$.name === 'docid')._;
-
-    const [authorsPart, ...rest] = label.split('. ');
-    const authors = authorsPart.split(', ');
-    const title = rest[0];
-
-    const parts = rest[1].split(', ');
-
-    const conference = parts[0];
-    const date = parts[1];
-    const location = parts.slice(2).join(', ');
-
+  for (const entry of parsedEntries) {    
     const publication = new Publication({
-      title: title,
-      authors: authors,
-      conference: conference,
-      date: date,
-      location: location,
-      id: id,
-      uri: uri,
+      title: entry.TITLE,
+      authors: entry.AUTHOR.split(' and ').map(author => author.trim()),
+      conference: entry.BOOKTITLE || entry.JOURNAL,
+      date: entry.YEAR,
+      location: entry.ADDRESS,
+      id: entry.HAL_ID,
+      uri: entry.URL,
+      type: entry.entryType,
     });
 
     await publication.save();
