@@ -13,24 +13,36 @@ db.once('open', () => {
 
 async function fetchPublicationsIrisa() {
   const url = 'https://api.archives-ouvertes.fr/search/?q=structId_i:490899&wt=bibtex&rows=10';
-  const response = await axios.get(url);
+  const response = await axios.get(url, { responseType: 'text' });
   const bibtexData = response.data;
 
   const parsedEntries = bibtexParse.entries(bibtexData);
 
-  for (const entry of parsedEntries) {    
+  let nbr = 0;
+
+  for (const entry of parsedEntries) {
+    if (!entry.ADDRESS || entry.ADDRESS.trim() === '') {
+      continue;
+    }
+
+    const authors = entry.AUTHOR.split(' and ').map(author => {
+      const [lastName, firstName] = author.split(',').map(part => part.trim());
+      return `${firstName} ${lastName}`;
+    });
+
     const publication = new Publication({
       title: entry.TITLE,
-      authors: entry.AUTHOR.split(' and ').map(author => author.trim()),
+      authors: authors,
       conference: entry.BOOKTITLE || entry.JOURNAL,
       date: entry.YEAR,
       location: entry.ADDRESS,
       id: entry.HAL_ID,
       uri: entry.URL,
-      type: entry.entryType,
     });
 
+    nbr++;
     await publication.save();
+    console.log(`Saving publication number ${nbr}.`);
   }
 }
 

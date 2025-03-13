@@ -41,7 +41,6 @@
       <tr>
         <th>Title</th>
         <th>Authors</th>
-        <th>Type</th>
         <th>Conference/Journal</th>
         <th>Date</th>
         <th>Location</th>
@@ -80,11 +79,6 @@
             authorsCell.textContent = 'N/A';
           }
           row.appendChild(authorsCell);
-
-          // Type (e.g., article, inproceedings, phdthesis)
-          const typeCell = document.createElement('td');
-          typeCell.textContent = pub.type || 'N/A';
-          row.appendChild(typeCell);
 
           // Conference/Journal
           const conferenceCell = document.createElement('td');
