@@ -11,8 +11,52 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
+const latexToUnicode = {
+  "{\\'e}": "é",
+  "{\\`e}": "è",
+  "{\\^e}": "ê",
+  "{\\~n}": "ñ",
+  "{\\`a}": "à",
+  "{\\'a}": "á",
+  "{\\^a}": "â",
+  "{\\~a}": "ã",
+  "{\\`i}": "ì",
+  "{\\'i}": "í",
+  "{\\^i}": "î",
+  "{\\~i}": "ĩ",
+  "{\\`o}": "ò",
+  "{\\'o}": "ó",
+  "{\\^o}": "ô",
+  "{\\~o}": "õ",
+  "{\\`u}": "ù",
+  "{\\'u}": "ú",
+  "{\\^u}": "û",
+  "{\\~u}": "ũ",
+  "{\\c{c}}": "ç",
+  "{\\ss}": "ß",
+  "{\\o}": "ø",
+  "{\\O}": "Ø",
+  "{\\ae}": "æ",
+  "{\\AE}": "Æ",
+  "{\\oe}": "œ",
+  "{\\OE}": "Œ",
+  "{\\aa}": "å",
+  "{\\AA}": "Å",
+  "{\\l}": "ł",
+  "{\\L}": "Ł",
+  // Add more mappings as needed
+};
+
+function replaceLatexSpecialChars(bibtexEntry) {
+  for (const [latexCode, unicodeChar] of Object.entries(latexToUnicode)) {
+    const regex = new RegExp(latexCode.replace(/[{}]/g, '\\$&'), 'g');
+    bibtexEntry = bibtexEntry.replace(regex, unicodeChar);
+  }
+  return bibtexEntry;
+}
+
 async function fetchPublicationsIrisa() {
-  const url = 'https://api.archives-ouvertes.fr/search/?q=structId_i:490899&wt=bibtex&rows=10';
+  const url = 'https://api.archives-ouvertes.fr/search/?q=structId_i:490899&wt=bibtex&rows=10000';
   const response = await axios.get(url, { responseType: 'text' });
   const bibtexData = response.data;
 
@@ -27,15 +71,15 @@ async function fetchPublicationsIrisa() {
 
     const authors = entry.AUTHOR.split(' and ').map(author => {
       const [lastName, firstName] = author.split(',').map(part => part.trim());
-      return `${firstName} ${lastName}`;
+      return replaceLatexSpecialChars(`${firstName} ${lastName}`);
     });
 
     const publication = new Publication({
-      title: entry.TITLE,
+      title: replaceLatexSpecialChars(entry.TITLE),
       authors: authors,
       conference: entry.BOOKTITLE || entry.JOURNAL,
-      date: entry.YEAR,
-      location: entry.ADDRESS,
+      year: entry.YEAR,
+      location: replaceLatexSpecialChars(entry.ADDRESS),
       id: entry.HAL_ID,
       uri: entry.URL,
     });

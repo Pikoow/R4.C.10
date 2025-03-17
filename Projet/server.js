@@ -15,6 +15,7 @@ db.once('open', () => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'node_modules/cesium/Build/Cesium')));
 
 app.get('/api/publications', async (req, res) => {
   try {
