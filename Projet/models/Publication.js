@@ -4,7 +4,7 @@ const publicationSchema = new mongoose.Schema({
   title: String,
   authors: [String],
   conference: String,
-  date: String,
+  year: String,
   location: String,
   pages: String,
   id: String,
