@@ -1,0 +1,70 @@
+\documentclass[a4paper,12pt]{article}  
+
+
+%%%%%%%%%% ----- PACKAGES UTILES ----- %%%%%%%%%%
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc}     
+\usepackage[french]{babel}   
+\usepackage{graphicx}        
+\usepackage{amsmath, amssymb} 
+\usepackage{hyperref}        
+\usepackage{geometry}        
+\geometry{margin=2cm}       
+
+
+%%%%%%%%%% ----- PAGE DE PRÉSENTATION ----- %%%%%%%%%%
+\title{Rapport R4.C10} % Titre
+\author{LECHAT Pierre, ROLLAND Stanislas}           
+\date{\today}                     
+\begin{document}
+\maketitle  
+\tableofcontents  
+\newpage          
+
+
+%%%%%%%%%% ----- INTRODUCTION ----- %%%%%%%%%%
+\section{Introduction}
+\subsection{Présentation du projet}
+  
+\subsection{Technologies utilisées}
+
+
+%%%%%%%%%% ----- DBLP ----- %%%%%%%%%%
+\section{DBLP et son API}
+
+\subsection{Présentation de DBLP}
+DBLP (Digital Bibliography and Library Project) est une base de données bibliographique dédiée à l’informatique, recensant des millions de publications issues de conférences et revues académiques. 
+Son interface permet d’effectuer des recherches par auteur, par titre, par conférence ou par revue et donc nous permettre d'accèder aux informations détaillées des différentes publications, par exemple les co-auteurs, le DOI, 
+les citations etc. DBLP possède une API, cette dernière permet d'effectuer des recherches avec les mêmes critères que vu précédemment et de récupèrer les résultats de ces dernières sous la forme d'un document au format JSON ou XML,
+facilitant ainsi l'intégration des données dans des applications externes.
+
+\subsection{L'API de DBLP au sein du projet}
+
+
+%%%%%%%%%% ----- HAL ----- %%%%%%%%%%
+\section{HAL et son API}
+
+\subsection{Présentation de HAL}
+HAL (Hyper Article en Ligne) est une plateforme de dépôt et de diffusion de publications scientifiques, Elle permet aux chercheurs de partager leurs travaux de manière ouverte et accessible comme vu précédemment avec DBLP. L'interface de HAL 
+permet de rechercher des publications par auteur, titre, mots-clés, ou établissement, offrant ainsi un accès détaillé aux publications, incluant les informations comme le DOI, les co-auteurs, les résumés, etc. HAL propose également une API, 
+qui permet de réaliser des recherches avec les mêmes critères et de récupérer les résultats sous forme de fichiers JSON ou XML ce qui va, comme l'API de DBLP, faciliter l'intégration des données dans des applications externes.
+
+\subsection{L'API de HAL au sein du projet}
+
+
+%%%%%%%%%% ----- CESIUM ----- %%%%%%%%%%
+\section{Cesium}
+\subsection{Présentation de Cesium}
+\subsection{Cesium au sein du projet}
+
+
+%%%%%%%%%% ----- CONCLUSION ----- %%%%%%%%%%
+\section{Conclusion}
+
+
+\newpage
+\begin{thebibliography}{9}
+    \bibitem{latex} Leslie Lamport, \textit{LaTeX: A Document Preparation System}, Addison-Wesley, 1994.
+\end{thebibliography}
+
+\end{document}
