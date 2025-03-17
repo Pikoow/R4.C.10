@@ -1,6 +1,5 @@
 const axios = require('axios');
-const xml2js = require('xml2js');
-const cheerio = require('cheerio');
+const bibtexParse = require('bibtex-parse');
 const mongoose = require('mongoose');
 const Publication = require('./models/Publication');
 
@@ -12,42 +11,41 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-async function fetchPublications() {
-  const url = 'https://dblp.org/search/publ/api?q=Laurent%20d%27Orazio&h=1000';
-  const response = await axios.get(url);
-  const parser = new xml2js.Parser();
-  const result = await parser.parseStringPromise(response.data);
+async function fetchPublicationsIrisa() {
+  const url = 'https://api.archives-ouvertes.fr/search/?q=structId_i:490899&wt=bibtex&rows=10';
+  const response = await axios.get(url, { responseType: 'text' });
+  const bibtexData = response.data;
 
-  const hits = result.result.hits[0].hit;
-  for (const hit of hits) {
-    const info = hit.info[0];
-    const authors = info.authors[0].author.map(author => ({
-      name: author._,
-      pid: author.$.pid
-    }));
+  const parsedEntries = bibtexParse.entries(bibtexData);
 
-    const pages = info.pages ? info.pages[0] : info.volume ? info.volume[0] : null;
+  let nbr = 0;
 
-    if (info.type == "Conference and Workshop Papers" || info.type == "Journal Articles") {
-      const publication = new Publication({
-        title: info.title ? info.title[0] : null,
-        authors: authors,
-        venue: info.venue ? info.venue[0] : null,
-        pages: pages,
-        year: info.year ? parseInt(info.year[0]) : null,
-        type: info.type ? info.type[0] : null,
-        access: info.access ? info.access[0] : null,
-        key: info.key ? info.key[0] : null,
-        doi: info.doi ? info.doi[0] : null,
-        ee: info.ee ? info.ee[0] : null,
-        url: info.url ? info.url[0] : null,
-      });
-
-      await publication.save();
+  for (const entry of parsedEntries) {
+    if (!entry.ADDRESS || entry.ADDRESS.trim() === '') {
+      continue;
     }
+
+    const authors = entry.AUTHOR.split(' and ').map(author => {
+      const [lastName, firstName] = author.split(',').map(part => part.trim());
+      return `${firstName} ${lastName}`;
+    });
+
+    const publication = new Publication({
+      title: entry.TITLE,
+      authors: authors,
+      conference: entry.BOOKTITLE || entry.JOURNAL,
+      date: entry.YEAR,
+      location: entry.ADDRESS,
+      id: entry.HAL_ID,
+      uri: entry.URL,
+    });
+
+    nbr++;
+    await publication.save();
+    console.log(`Saving publication number ${nbr}.`);
   }
 }
 
-fetchPublications().then(() => {
+fetchPublicationsIrisa().then(() => {
   console.log('Publications fetched and saved to MongoDB');
 });

@@ -1,21 +1,16 @@
 const mongoose = require('mongoose');
 
-const PublicationSchema = new mongoose.Schema({
+const publicationSchema = new mongoose.Schema({
   title: String,
-  authors: [{
-    name: String,
-    pid: String,
-    isIrisaAffiliated: Boolean
-  }],
-  venue: String,
+  authors: [String],
+  conference: String,
+  date: String,
+  location: String,
   pages: String,
-  year: Number,
-  type: String,
-  access: String,
-  key: String,
-  doi: String,
-  ee: String,
-  url: String
+  id: String,
+  uri: String,
 });
 
-module.exports = mongoose.model('Publication', PublicationSchema);
+const Publication = mongoose.model('Publication', publicationSchema);
+
+module.exports = Publication;
