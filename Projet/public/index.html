@@ -81,7 +81,7 @@
           throw new Error('Failed to fetch data');
         }
         let publications = await response.json();
-        //publications = publications.slice(0, 1000);
+        publications = publications.slice(0, 5);
 
         const tableBody = document.querySelector('#publications-table tbody');
         tableBody.innerHTML = '';
