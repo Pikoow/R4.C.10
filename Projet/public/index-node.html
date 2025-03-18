@@ -61,12 +61,7 @@
         terrainProvider: terrainProvider
       });
 
-      const savedState = localStorage.getItem('cesiumViewerState');
-      if (savedState) {
-        viewer.scene.loadState(JSON.parse(savedState));
-      } else {
-        fetchPublications(viewer);
-      }
+      fetchPublications(viewer);
     }
 
     function delay(ms) {
@@ -81,7 +76,7 @@
           throw new Error('Failed to fetch data');
         }
         let publications = await response.json();
-        publications = publications.slice(0, 5);
+        //publications = publications.slice(0, 1000);
 
         const tableBody = document.querySelector('#publications-table tbody');
         tableBody.innerHTML = '';
@@ -111,7 +106,6 @@
             });
           }
         }
-
         const viewerState = viewer.scene.saveState();
         localStorage.setItem('cesiumViewerState', JSON.stringify(viewerState));
       } catch (error) {
