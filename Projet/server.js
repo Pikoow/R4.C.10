@@ -1,7 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const Publication = require('./models/Publication');
+const Publication = require('./Node/models/Publication');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
@@ -24,6 +25,17 @@ app.get('/api/publications', async (req, res) => {
   } catch (error) {
     console.error('Error fetching publications:', error);
     res.status(500).json({ error: 'Failed to fetch publications' });
+  }
+});
+
+app.get('/save-publications', async (req, res) => {
+  try {
+    const publications = await Publication.find();
+    fs.writeFileSync(path.join(__dirname, 'public', 'publications.json'), JSON.stringify(publications));
+    res.send('Publications saved to publications.json');
+  } catch (error) {
+    console.error('Error saving publications:', error);
+    res.status(500).json({ error: 'Failed to save publications' });
   }
 });
 
