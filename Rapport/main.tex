@@ -38,10 +38,24 @@
 \section{Introduction}
 
 \subsection{Présentation du projet}
-Le projet consiste à développer une application permettant de gérer les publications scientifiques, notamment les revues et conférences, publiées par des chercheurs de l'IRISA ainsi que ceux qui y sont affiliés. L'application présente 
+Ce projet consiste à développer une application permettant de gérer les publications scientifiques, notamment les revues et conférences, publiées par des chercheurs de l'IRISA ainsi que ceux qui y sont affiliés. L'application présente 
 également une représentation visuelle de ces données sur un globe interactif.
 
 \subsection{Technologies utilisées}
+
+\subsubsection{Stockage des données}
+Pour le stockage, nous avons fait le choix d'utiliser MongoDB. Ce choix s'explique par notre connaissance de MongoDB, l'interface proposée par leur site est également très simple à comprendre et à prendre en main, notamment le module que nous 
+utilisons afin de lier notre base MongoDB à notre serveur Node.JS. Dernier point fort que l'on trouve dans l'utilisation de MongoDB : c'est le format de stockage des données, le JSON, ce qui nous permet de traiter rapidement les données et de faire 
+efficacement le lien avec notre JavaScript.
+
+\subsubsection{Traitement des données}
+Pour le traitement des données, nous avons fait le choix d'utiliser Node.JS. Comme vu au point précédent, le lien entre Node.JS et notre base MongoDB s'effectue de manière simple et rapide via un module : Mongoose. Grâce à ce module, nous avons correctement
+structuré nos données et nous avons également fait nos interactions avec notre base le plus simplement possible. Mongoose n'est pas le seul module que nous avons utilisé, c'est là que réside notre choix d'utiliser Node.js, en plus de notre familiarité avec ce dernier : la grande variété de modules qui 
+sont à notre disposition. On retrouve notamment le module Axios, qui nous permet d'effectuer nos requêtes avec les APIs proposées par DBLP et par HAL, ainsi que le module Bibtex, qui nous permet de séparer l'ensemble des publications que nous traitons afin de simplifier l'organisation des données.
+
+\subsubsection{Affichage des données}
+Pour l'affichage des données, nous avons fait le choix d'utiliser la librairie Cesium.JS et l'API d'OpenStreetMap. La librairie Cesium.JS nous permet de générer un globe interactif sur lequel nous pouvons présenter les données que nous avons collectées. En plus de ce globe, nous avons
+utilisé l'API d'OpenStreetMap afin de récupérer les coordonnées géographiques d'une ville et d'un pays afin de localiser sur notre globe le lieu renvoyé par l'API de HAL.
 
 
 %%%%%%%%%% ----- DBLP ----- %%%%%%%%%%
@@ -49,26 +63,29 @@ Le projet consiste à développer une application permettant de gérer les publi
 
 \subsection{Présentation de DBLP}
 DBLP (Digital Bibliography and Library Project) est une base de données bibliographique dédiée à l’informatique, recensant des millions de publications issues de conférences et revues académiques. 
-Son interface permet d’effectuer des recherches par auteur, par titre, par conférence ou par revue et donc nous permettre d'accèder aux informations détaillées des différentes publications, par exemple les co-auteurs, le DOI, 
-les citations etc. DBLP possède une API, cette dernière permet d'effectuer des recherches avec les mêmes critères que vu précédemment et de récupèrer les résultats de ces dernières sous la forme d'un document au format JSON ou XML,
+Son interface permet d’effectuer des recherches par auteur, par titre, par conférence ou par revue et donc nous permet d'accéder aux informations détaillées des différentes publications, par exemple les co-auteurs, le DOI, 
+les citations, etc. DBLP possède une API, cette dernière permet d'effectuer des recherches avec les mêmes critères que vus précédemment et de récupérer les résultats de ces dernières sous la forme d'un document au format JSON ou XML,
 facilitant ainsi l'intégration des données dans des applications externes.
 
 \subsection{L'API de DBLP au sein du projet}
 L'API de DBLP, présentée précédemment, a été utilisée dans ce projet afin de récupérer toutes les conférences ainsi que les revues d'un chercheur de l'IRISA donné. Une fois les résultats de cette recherche obtenus et stockés dans notre entrepôt de données, 
 nous avons choisi de présenter ces informations sous la forme d'un tableau dans lequel on retrouve : <compléter plus tard>. Cependant, malgré ces données, l'objectif n'était pas encore atteint. Nous avions récupéré les informations d'un chercheur de l'IRISA, 
 mais pas celles de tous les chercheurs et des personnes affiliées à ce laboratoire. Pour cela, nous avons choisi d'utiliser l'API de DBLP sur tous les co-auteurs des publications du chercheur initial, et de vérifier si ces co-auteurs faisaient partie de l'IRISA 
-ou s'ils y étaient affiliés. Nous avons répéter ce processus jusqu'a obtenir le maximum d'informations afin d'enrichir notre entrepôt de données.
+ou s'ils y étaient affiliés. Nous avons répété ce processus jusqu'à obtenir le maximum d'informations afin d'enrichir notre entrepôt de données.
 
 
 %%%%%%%%%% ----- HAL ----- %%%%%%%%%%
 \section{HAL et son API}
 
 \subsection{Présentation de HAL}
-HAL (Hyper Article en Ligne) est une plateforme de dépôt et de diffusion de publications scientifiques, Elle permet aux chercheurs de partager leurs travaux de manière ouverte et accessible comme vu précédemment avec DBLP. L'interface de HAL 
-permet de rechercher des publications par auteur, titre, mots-clés, ou établissement, offrant ainsi un accès détaillé aux publications, incluant les informations comme le DOI, les co-auteurs, les résumés, etc. HAL propose également une API, 
-qui permet de réaliser des recherches avec les mêmes critères et de récupérer les résultats sous forme de fichiers JSON ou XML ce qui va, comme l'API de DBLP, faciliter l'intégration des données dans des applications externes.
+HAL (Hyper Article en Ligne) est une plateforme de dépôt et de diffusion de publications scientifiques. Elle permet aux chercheurs de partager leurs travaux de manière ouverte et accessible comme vu précédemment avec DBLP. L'interface de HAL 
+permet de rechercher des publications par auteur, titre, mots-clés ou établissement, offrant ainsi un accès détaillé aux publications, incluant les informations comme le DOI, les co-auteurs, les résumés, etc. HAL propose également une API, 
+qui permet de réaliser des recherches avec les mêmes critères et de récupérer les résultats sous forme de fichiers JSON ou XML, ce qui va, comme l'API de DBLP, faciliter l'intégration des données dans des applications externes.
 
 \subsection{L'API de HAL au sein du projet}
+L'API de DBLP, présentée précédemment, a été utilisée dans ce projet afin de récupérer toutes les conférences ainsi que les revues des chercheurs de l'IRISA ainsi que les personnes qui y sont affiliés. Contrairement à l'API de DBLP, celle de HAL nous permet de 
+faire notre recherche directement sur le laboratoire, plus besoin de rechercher dans les co-auteurs des publications qui est affilié à l'IRISA et qui ne l'est pas. Nous avons donc juste eu à parcourir l'ensemble des publications de l'IRISA une seule fois et de 
+sélectionner uniquement les revues ainsi que les conférences.
 
 
 %%%%%%%%%% ----- CESIUM ----- %%%%%%%%%%
@@ -76,9 +93,11 @@ qui permet de réaliser des recherches avec les mêmes critères et de récupér
 
 \subsection{Présentation de Cesium}
 Cesium est une plateforme de visualisation géospatiale en 3D, permettant de créer des cartes interactives et des applications en temps réel. Elle offre des vues en 3D de la Terre, avec la possibilité d'afficher des données géospatiales comme 
-des images satellites et des modèles de terrain. Grâce à son API, il est possible d'intégrer et de personnaliser des cartes 3D, en ajoutant des éléments interactifs tels que des marqueurs et des trajectoires entre différentes zones géographique.
+des images satellites et des modèles de terrain. Grâce à son API, il est possible d'intégrer et de personnaliser des cartes 3D, en ajoutant des éléments interactifs tels que des marqueurs et des trajectoires entre différentes zones géographiques.
 
 \subsection{Cesium au sein du projet}
+Dans notre projet, nous avons utilisé Cesium.JS pour la visualisation interactive des publications scientifiques sur un globe interactif. Grâce à cette librairie, nous avons pu représenter les données issues de HAL sous forme de points géolocalisés 
+correspondant aux lieux des conférences et des institutions des auteurs. En plus de ces points, nous avons égalemment représenté les liens qui existent entre les différents lieux de publications et l'IRISA.
 
 
 %%%%%%%%%% ----- CONCLUSION ----- %%%%%%%%%%

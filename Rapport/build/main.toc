@@ -2,13 +2,16 @@
 \contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
 \contentsline {subsection}{\numberline {1.1}Présentation du projet}{2}{subsection.1.1}%
 \contentsline {subsection}{\numberline {1.2}Technologies utilisées}{2}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Stockage des données}{2}{subsubsection.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.2.2}Traitement des données}{2}{subsubsection.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.2.3}Affichage des données}{2}{subsubsection.1.2.3}%
 \contentsline {section}{\numberline {2}DBLP et son API}{2}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Présentation de DBLP}{2}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}L'API de DBLP au sein du projet}{2}{subsection.2.2}%
-\contentsline {section}{\numberline {3}HAL et son API}{2}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Présentation de HAL}{2}{subsection.3.1}%
+\contentsline {subsection}{\numberline {2.2}L'API de DBLP au sein du projet}{3}{subsection.2.2}%
+\contentsline {section}{\numberline {3}HAL et son API}{3}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Présentation de HAL}{3}{subsection.3.1}%
 \contentsline {subsection}{\numberline {3.2}L'API de HAL au sein du projet}{3}{subsection.3.2}%
 \contentsline {section}{\numberline {4}Cesium}{3}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Présentation de Cesium}{3}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Cesium au sein du projet}{3}{subsection.4.2}%
-\contentsline {section}{\numberline {5}Conclusion}{3}{section.5}%
+\contentsline {subsection}{\numberline {4.2}Cesium au sein du projet}{4}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Conclusion}{4}{section.5}%
