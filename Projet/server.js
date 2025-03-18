@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const Publication = require('./models/Publication');
+const Publication = require('./Node/models/Publication');
 const path = require('path');
 const fs = require('fs');
 

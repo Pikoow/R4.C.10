@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="./Build/Cesium/Cesium.js"></script>
-  <link href="./Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <script src="../Build/Cesium/Cesium.js"></script>
+  <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet">
   <title>IRISA Publications</title>
   <style>
     body {
@@ -105,7 +105,7 @@
             <td>${pub.uri ? `<a href="${pub.uri}" target="_blank">View</a>` : 'N/A'}</td>
           `;
           tableBody.appendChild(row);
-          await delay(500);
+          await delay(1000);
           if (pub.location) {
             geocodeLocation(pub.location).then(coords => {
               if (coords) {
