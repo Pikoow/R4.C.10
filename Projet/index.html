@@ -56,12 +56,22 @@
 
   <script>
     async function initializeCesium() {
-      const terrainProvider = await Cesium.createWorldTerrainAsync();
-      const viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: terrainProvider
-      });
+      // Ensure Cesium is loaded
+      if (!Cesium || !Cesium.createWorldTerrainAsync) {
+        console.error('Cesium is not properly loaded.');
+        return;
+      }
 
-      fetchPublications(viewer);
+      try {
+        const terrainProvider = await Cesium.createWorldTerrainAsync();
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+          terrainProvider: terrainProvider
+        });
+
+        fetchPublications(viewer);
+      } catch (error) {
+        console.error('Error initializing Cesium:', error);
+      }
     }
 
     function delay(ms) {
