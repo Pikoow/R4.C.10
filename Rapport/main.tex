@@ -4,12 +4,24 @@
 %%%%%%%%%% ----- PACKAGES UTILES ----- %%%%%%%%%%
 \usepackage[utf8]{inputenc} 
 \usepackage[T1]{fontenc}     
-\usepackage[french]{babel}   
+\usepackage[french]{babel} 
+\usepackage{fancyhdr}  
 \usepackage{graphicx}        
 \usepackage{amsmath, amssymb} 
 \usepackage{hyperref}        
 \usepackage{geometry}        
-\geometry{margin=2cm}       
+\geometry{margin=2cm}  
+
+
+%%%%%%%%%% ----- EN-TÊTE ET PIED DE PAGE ----- %%%%%%%%%%
+\pagestyle{fancy}
+\fancyhf{} 
+
+\fancyhead[L]{IUT Lannion - R4.C.10} 
+\fancyhead[R]{2025} 
+
+\fancyfoot[L]{LECHAT Pierre, ROLLAND Stanislas} 
+\fancyfoot[R]{\thepage}
 
 
 %%%%%%%%%% ----- PAGE DE PRÉSENTATION ----- %%%%%%%%%%
@@ -24,8 +36,11 @@
 
 %%%%%%%%%% ----- INTRODUCTION ----- %%%%%%%%%%
 \section{Introduction}
+
 \subsection{Présentation du projet}
-  
+Le projet consiste à développer une application permettant de gérer les publications scientifiques, notamment les revues et conférences, publiées par des chercheurs de l'IRISA ainsi que ceux qui y sont affiliés. L'application présente 
+également une représentation visuelle de ces données sur un globe interactif.
+
 \subsection{Technologies utilisées}
 
 
@@ -39,6 +54,10 @@ les citations etc. DBLP possède une API, cette dernière permet d'effectuer des
 facilitant ainsi l'intégration des données dans des applications externes.
 
 \subsection{L'API de DBLP au sein du projet}
+L'API de DBLP, présentée précédemment, a été utilisée dans ce projet afin de récupérer toutes les conférences ainsi que les revues d'un chercheur de l'IRISA donné. Une fois les résultats de cette recherche obtenus et stockés dans notre entrepôt de données, 
+nous avons choisi de présenter ces informations sous la forme d'un tableau dans lequel on retrouve : <compléter plus tard>. Cependant, malgré ces données, l'objectif n'était pas encore atteint. Nous avions récupéré les informations d'un chercheur de l'IRISA, 
+mais pas celles de tous les chercheurs et des personnes affiliées à ce laboratoire. Pour cela, nous avons choisi d'utiliser l'API de DBLP sur tous les co-auteurs des publications du chercheur initial, et de vérifier si ces co-auteurs faisaient partie de l'IRISA 
+ou s'ils y étaient affiliés. Nous avons répéter ce processus jusqu'a obtenir le maximum d'informations afin d'enrichir notre entrepôt de données.
 
 
 %%%%%%%%%% ----- HAL ----- %%%%%%%%%%
@@ -54,7 +73,11 @@ qui permet de réaliser des recherches avec les mêmes critères et de récupér
 
 %%%%%%%%%% ----- CESIUM ----- %%%%%%%%%%
 \section{Cesium}
+
 \subsection{Présentation de Cesium}
+Cesium est une plateforme de visualisation géospatiale en 3D, permettant de créer des cartes interactives et des applications en temps réel. Elle offre des vues en 3D de la Terre, avec la possibilité d'afficher des données géospatiales comme 
+des images satellites et des modèles de terrain. Grâce à son API, il est possible d'intégrer et de personnaliser des cartes 3D, en ajoutant des éléments interactifs tels que des marqueurs et des trajectoires entre différentes zones géographique.
+
 \subsection{Cesium au sein du projet}
 
 
