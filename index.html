@@ -34,17 +34,11 @@
     a:hover {
       text-decoration: underline;
     }
-    #loading {
-      text-align: center;
-      margin: 20px;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
   <h1>IRISA Publications</h1>
   <div id="cesiumContainer" style="width: 100%; height: 500px;"></div>
-  <div id="loading">Loading publications and connections...</div>
   <table id="publications-table">
     <thead>
       <tr>
@@ -61,143 +55,46 @@
   </table>
 
   <script>
-    // Cache for geocoded locations to avoid duplicate API calls
-    const locationCache = new Map();
-    const irisaCoords = { lat: 48.11653156616513, lon: -1.6397623029868635 };
-    let viewer;
-    let batchProcessor;
-
     async function initializeCesium() {
+      // Ensure Cesium is loaded
+      if (!Cesium || !Cesium.createWorldTerrainAsync) {
+        console.error('Cesium is not properly loaded.');
+        return;
+      }
+
       try {
-        // Initialize Cesium viewer with terrain
         const terrainProvider = await Cesium.createWorldTerrainAsync();
-        viewer = new Cesium.Viewer('cesiumContainer', {
-          terrainProvider: terrainProvider,
-          timeline: false,
-          animation: false,
-          baseLayerPicker: false
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+          terrainProvider: terrainProvider
         });
 
-        // Add IRISA location marker
-        viewer.entities.add({
-          name: "IRISA",
-          position: Cesium.Cartesian3.fromDegrees(irisaCoords.lon, irisaCoords.lat),
-          point: {
-            pixelSize: 10,
-            color: Cesium.Color.GREEN,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 2
-          },
-          label: {
-            text: "IRISA",
-            font: '14pt sans-serif',
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            outlineWidth: 2,
-            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset: new Cesium.Cartesian2(0, -10)
-          }
-        });
-
-        // Initialize batch processor for connections
-        batchProcessor = new ConnectionBatchProcessor(viewer, irisaCoords);
-
-        // Load publications
-        await fetchPublications();
-
-        // Restore viewer state if available
-        const savedState = localStorage.getItem('cesiumViewerState');
-        if (savedState) {
-          viewer.scene.loadState(JSON.parse(savedState));
-        } else {
-          // Zoom to show all entities if no saved state
-          viewer.zoomTo(viewer.entities);
-        }
-
-        document.getElementById('loading').style.display = 'none';
+        fetchPublications(viewer);
       } catch (error) {
         console.error('Error initializing Cesium:', error);
-        document.getElementById('loading').textContent = 'Error loading visualization. Please check console for details.';
       }
     }
 
-    class ConnectionBatchProcessor {
-      constructor(viewer, irisaCoords) {
-        this.viewer = viewer;
-        this.irisaCoords = irisaCoords;
-        this.queue = [];
-        this.processing = false;
-        this.batchSize = 10; // Process 10 locations at a time
-        this.delayBetweenBatches = 100; // 100ms between batches
-      }
-
-      addToQueue(location) {
-        this.queue.push(location);
-        if (!this.processing) {
-          this.processQueue();
-        }
-      }
-
-      async processQueue() {
-        this.processing = true;
-        
-        while (this.queue.length > 0) {
-          const batch = this.queue.splice(0, this.batchSize);
-          await Promise.all(batch.map(location => this.processLocation(location)));
-          
-          if (this.queue.length > 0) {
-            await new Promise(resolve => setTimeout(resolve, this.delayBetweenBatches));
-          }
-        }
-        
-        this.processing = false;
-      }
-
-      async processLocation(location) {
-        try {
-          const coords = await geocodeLocation(location);
-          if (coords) {
-            this.drawConnection(coords);
-          }
-        } catch (error) {
-          console.error(`Error processing location ${location}:`, error);
-        }
-      }
-
-      drawConnection(coords) {
-        this.viewer.entities.add({
-          polyline: {
-            positions: Cesium.Cartesian3.fromDegreesArray([
-              this.irisaCoords.lon, this.irisaCoords.lat,
-              coords.lon, coords.lat
-            ]),
-            width: 1,
-            material: Cesium.Color.RED.withAlpha(0.5)
-          }
-        });
-
-        this.viewer.entities.add({
-          position: Cesium.Cartesian3.fromDegrees(coords.lon, coords.lat),
-          point: {
-            pixelSize: 6,
-            color: Cesium.Color.BLUE,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 1
-          }
-        });
-      }
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async function fetchPublications() {
+    async function fetchPublications(viewer) {
+      let id = 0;
       try {
+        // Load the pre-fetched publications data
         const response = await fetch('Projet/Json/publications.json');
-        if (!response.ok) throw new Error('Failed to fetch data');
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
         const publications = await response.json();
 
         const tableBody = document.querySelector('#publications-table tbody');
         tableBody.innerHTML = '';
 
-        // First pass: render all table rows quickly
-        publications.forEach(pub => {
+        const irisaCoords = { lat: 48.11653156616513, lon: -1.6397623029868635 };
+
+        for (const pub of publications) {
+          // Create table row
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${pub.title || 'N/A'}</td>
@@ -208,50 +105,55 @@
             <td>${pub.uri ? `<a href="${pub.uri}" target="_blank">View</a>` : 'N/A'}</td>
           `;
           tableBody.appendChild(row);
-        });
+          await delay(100);
+          if (pub.location) {
+            geocodeLocation(pub.location).then(coords => {
+              if (coords) {
+                drawConnection(viewer, irisaCoords, coords);
+                id++;
+                console.log(id);
+              }
+            });
+          }
+        }
 
-        // Second pass: process locations in batches
-        const locations = publications
-          .filter(pub => pub.location)
-          .map(pub => pub.location);
-        
-        // Process unique locations only
-        const uniqueLocations = [...new Set(locations)];
-        uniqueLocations.forEach(location => batchProcessor.addToQueue(location));
-
-        // Save viewer state after all connections are drawn
-        setTimeout(() => {
-          const viewerState = viewer.scene.saveState();
-          localStorage.setItem('cesiumViewerState', JSON.stringify(viewerState));
-        }, 5000); // Give some time for all connections to be processed
-
+        const viewerState = viewer.scene.saveState();
+        localStorage.setItem('cesiumViewerState', JSON.stringify(viewerState));
       } catch (error) {
         console.error('Error fetching publications:', error);
-        document.getElementById('loading').textContent = 'Failed to load publications. Please try again.';
+        alert('Failed to load publications. Please try again.');
       }
     }
 
     async function geocodeLocation(location) {
-      // Check cache first
-      if (locationCache.has(location)) {
-        return locationCache.get(location);
-      }
+      const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=555f30d6f40cd6f5f134ba992eda7809`);
+      const data = await response.json();
 
-      try {
-        const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=555f30d6f40cd6f5f134ba992eda7809`);
-        if (!response.ok) throw new Error('Geocoding API error');
-        
-        const data = await response.json();
-        if (data.length > 0) {
-          const coords = { lat: data[0].lat, lon: data[0].lon };
-          locationCache.set(location, coords);
-          return coords;
-        }
-        return null;
-      } catch (error) {
-        console.error(`Geocoding error for ${location}:`, error);
-        return null;
+      if (data.length > 0) {
+        return { lat: data[0].lat, lon: data[0].lon };
       }
+      return null;
+    }
+
+    function drawConnection(viewer, from, to) {
+      viewer.entities.add({
+        polyline: {
+          positions: Cesium.Cartesian3.fromDegreesArray([
+            from.lon, from.lat,
+            to.lon, to.lat
+          ]),
+          width: 2,
+          material: Cesium.Color.RED.withAlpha(0.7)
+        }
+      });
+
+      viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
+        point: {
+          pixelSize: 8,
+          color: Cesium.Color.BLUE
+        }
+      });
     }
 
     document.addEventListener('DOMContentLoaded', initializeCesium);
