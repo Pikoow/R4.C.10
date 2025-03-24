@@ -81,7 +81,6 @@
     async function fetchPublications(viewer) {
       let id = 0;
       try {
-        // Load the publications data
         const pubsResponse = await fetch('Projet/Json/publications.json');
         if (!pubsResponse.ok) throw new Error('Failed to fetch publications');
         const publications = await pubsResponse.json();
@@ -122,9 +121,6 @@
 
           console.log("C'est bon !");
         }
-
-        const viewerState = viewer.scene.saveState();
-        localStorage.setItem('cesiumViewerState', JSON.stringify(viewerState));
       } catch (error) {
         console.error('Error:', error);
         alert('Failed to load data. Please try again.');
