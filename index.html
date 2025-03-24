@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="../Build/Cesium/Cesium.js"></script>
-  <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <script src="Projet/Build/Cesium/Cesium.js"></script>
+  <link href="Projet/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
   <title>IRISA Publications</title>
   <style>
     body {
@@ -82,7 +82,7 @@
       let id = 0;
       try {
         // Load the pre-fetched publications data
-        const response = await fetch('publications.json');
+        const response = await fetch('Projet/Json/publications.json');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -105,7 +105,7 @@
             <td>${pub.uri ? `<a href="${pub.uri}" target="_blank">View</a>` : 'N/A'}</td>
           `;
           tableBody.appendChild(row);
-          await delay(1000);
+          await delay(100);
           if (pub.location) {
             geocodeLocation(pub.location).then(coords => {
               if (coords) {
