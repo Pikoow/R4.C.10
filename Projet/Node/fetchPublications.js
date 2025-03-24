@@ -32,19 +32,7 @@ const latexToUnicode = {
   "{\\'u}": "ú",
   "{\\^u}": "û",
   "{\\~u}": "ũ",
-  "{\\c{c}}": "ç",
-  "{\\ss}": "ß",
-  "{\\o}": "ø",
-  "{\\O}": "Ø",
-  "{\\ae}": "æ",
-  "{\\AE}": "Æ",
-  "{\\oe}": "œ",
-  "{\\OE}": "Œ",
-  "{\\aa}": "å",
-  "{\\AA}": "Å",
-  "{\\l}": "ł",
-  "{\\L}": "Ł",
-  // Add more mappings as needed
+  "{\\c{c}}": "ç"
 };
 
 function replaceLatexSpecialChars(bibtexEntry) {

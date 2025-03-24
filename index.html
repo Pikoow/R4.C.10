@@ -85,7 +85,6 @@
         if (!pubsResponse.ok) throw new Error('Failed to fetch publications');
         const publications = await pubsResponse.json();
 
-        // Load the connections data
         const connResponse = await fetch('Projet/Json/connections.json');
         if (!connResponse.ok) throw new Error('Failed to fetch connections');
         const connections = await connResponse.json();
@@ -95,14 +94,12 @@
 
         const irisaCoords = { lat: 48.11653156616513, lon: -1.6397623029868635 };
 
-        // Create a lookup for connections by location
         const connectionLookup = {};
         connections.forEach(conn => {
           connectionLookup[conn.location] = conn.to;
         });
 
         for (const pub of publications) {
-          // Create table row (same as before)
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${pub.title || 'N/A'}</td>
