@@ -118,8 +118,9 @@
           if (pub.location && connectionLookup[pub.location]) {
             drawConnection(viewer, irisaCoords, connectionLookup[pub.location]);
             id++;
-            console.log(id);
           }
+
+          console.log("C'est bon !");
         }
 
         const viewerState = viewer.scene.saveState();
