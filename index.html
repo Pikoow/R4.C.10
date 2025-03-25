@@ -34,9 +34,10 @@
     a:hover {
       text-decoration: underline;
     }
-    .highlight {
-      background-color: #ffeb3b;
-      transition: background-color 0.5s;
+    .cesium-infoBox-description {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      padding: 10px;
     }
   </style>
 </head>
@@ -59,9 +60,6 @@
   </table>
 
   <script>
-    let publicationsData = [];
-    let locationToPublications = {};
-
     async function initializeCesium() {
       // Ensure Cesium is loaded
       if (!Cesium || !Cesium.createWorldTerrainAsync) {
@@ -79,7 +77,8 @@
           navigationHelpButton: false,
           animation: false,
           timeline: false,
-          fullscreenButton: false
+          fullscreenButton: false,
+          infoBox: true // Ensure info box is enabled
         });
 
         // Set a higher view point to see more of the globe
@@ -92,42 +91,6 @@
           }
         });
 
-        // Set up click handler
-        viewer.screenSpaceEventHandler.setInputAction(function(click) {
-          const pickedObject = viewer.scene.pick(click.position);
-          if (Cesium.defined(pickedObject)) {
-            const entity = pickedObject.id;
-            if (entity && entity.position && entity.point) {
-              // Find publications for this location
-              const lon = Cesium.Math.toDegrees(entity.position.getValue(viewer.clock.currentTime)).longitude;
-              const lat = Cesium.Math.toDegrees(entity.position.getValue(viewer.clock.currentTime)).latitude;
-              
-              const locationKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
-              const publications = locationToPublications[locationKey];
-              
-              if (publications && publications.length > 0) {
-                // Show info box with publication titles
-                const titles = publications.map(pub => pub.title).join('<br>');
-                viewer.selectedEntity = entity;
-                viewer.infoBox.viewModel.description = `<strong>Publications:</strong><br>${titles}`;
-                
-                // Highlight corresponding table rows
-                const tableRows = document.querySelectorAll('#publications-table tbody tr');
-                tableRows.forEach(row => row.classList.remove('highlight'));
-                
-                publications.forEach(pub => {
-                  const index = publicationsData.findIndex(p => p.title === pub.title);
-                  if (index >= 0 && tableRows[index]) {
-                    tableRows[index].classList.add('highlight');
-                    // Scroll to the row
-                    tableRows[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                  }
-                });
-              }
-            }
-          }
-        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
         fetchPublications(viewer);
       } catch (error) {
         console.error('Error initializing Cesium:', error);
@@ -135,10 +98,11 @@
     }
 
     async function fetchPublications(viewer) {
+      let id = 0;
       try {
         const pubsResponse = await fetch('Projet/Json/publications.json');
         if (!pubsResponse.ok) throw new Error('Failed to fetch publications');
-        publicationsData = await pubsResponse.json();
+        const publications = await pubsResponse.json();
 
         const connResponse = await fetch('Projet/Json/connections.json');
         if (!connResponse.ok) throw new Error('Failed to fetch connections');
@@ -154,9 +118,19 @@
           connectionLookup[conn.location] = conn.to;
         });
 
-        // Add IRISA location
+        // Create a lookup for publications by location
+        const publicationsByLocation = {};
+        publications.forEach(pub => {
+          if (pub.location) {
+            if (!publicationsByLocation[pub.location]) {
+              publicationsByLocation[pub.location] = [];
+            }
+            publicationsByLocation[pub.location].push(pub);
+          }
+        });
+
+        // Add IRISA point
         viewer.entities.add({
-          name: "IRISA",
           position: Cesium.Cartesian3.fromDegrees(irisaCoords.lon, irisaCoords.lat),
           point: {
             pixelSize: 10,
@@ -174,22 +148,7 @@
           }
         });
 
-        // Group publications by location
-        locationToPublications = {};
-        publicationsData.forEach(pub => {
-          if (pub.location && connectionLookup[pub.location]) {
-            const to = connectionLookup[pub.location];
-            const locationKey = `${to.lat.toFixed(2)},${to.lon.toFixed(2)}`;
-            
-            if (!locationToPublications[locationKey]) {
-              locationToPublications[locationKey] = [];
-            }
-            locationToPublications[locationKey].push(pub);
-          }
-        });
-
-        // Add table rows and map points
-        for (const pub of publicationsData) {
+        for (const pub of publications) {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${pub.title || 'N/A'}</td>
@@ -202,34 +161,18 @@
           tableBody.appendChild(row);
           
           if (pub.location && connectionLookup[pub.location]) {
-            const to = connectionLookup[pub.location];
-            drawConnection(viewer, irisaCoords, to);
+            drawConnection(viewer, irisaCoords, connectionLookup[pub.location], publicationsByLocation[pub.location]);
+            id++;
           }
         }
-
-        console.log("Data loaded successfully!");
       } catch (error) {
         console.error('Error:', error);
         alert('Failed to load data. Please try again.');
       }
     }
 
-    function drawConnection(viewer, from, to) {
-      const locationKey = `${to.lat.toFixed(2)},${to.lon.toFixed(2)}`;
-      const publications = locationToPublications[locationKey];
-      const titles = publications ? publications.map(pub => pub.title).join('\n') : '';
-      
-      viewer.entities.add({
-        position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
-        name: titles,
-        point: {
-          pixelSize: 5,
-          color: Cesium.Color.CYAN.withAlpha(0.7),
-          outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
-          outlineWidth: 0.5
-        }
-      });
-
+    function drawConnection(viewer, from, to, publications) {
+      // Add the connection line
       viewer.entities.add({
         polyline: {
           positions: Cesium.Cartesian3.fromDegreesArray([
@@ -240,6 +183,26 @@
           material: Cesium.Color.YELLOW.withAlpha(0.3),
           arcType: Cesium.ArcType.GEODESIC
         }
+      });
+
+      // Create HTML content for the info box
+      let description = '<div><strong>Publications at this location:</strong><ul>';
+      publications.forEach(pub => {
+        description += `<li>${pub.title || 'Untitled'} (${pub.year || 'Unknown year'})</li>`;
+      });
+      description += '</ul></div>';
+
+      // Add the point with clickable info
+      viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
+        point: {
+          pixelSize: 6,  // Slightly larger for better clickability
+          color: Cesium.Color.CYAN.withAlpha(0.7),
+          outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
+          outlineWidth: 0.5
+        },
+        name: `Location: ${to.lat.toFixed(4)}, ${to.lon.toFixed(4)}`,
+        description: description
       });
     }
 
