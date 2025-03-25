@@ -34,6 +34,10 @@
     a:hover {
       text-decoration: underline;
     }
+    .highlight {
+      background-color: #ffeb3b;
+      transition: background-color 0.5s;
+    }
   </style>
 </head>
 <body>
@@ -56,17 +60,10 @@
 
   <script>
     async function initializeCesium() {
-      // Ensure Cesium is loaded
-      if (!Cesium || !Cesium.createWorldTerrainAsync) {
-        console.error('Cesium is not properly loaded.');
-        return;
-      }
-
       try {
         const terrainProvider = await Cesium.createWorldTerrainAsync();
         const viewer = new Cesium.Viewer('cesiumContainer', {
           terrainProvider: terrainProvider,
-          // Disable some features for better performance
           sceneModePicker: false,
           baseLayerPicker: false,
           navigationHelpButton: false,
@@ -75,15 +72,39 @@
           fullscreenButton: false
         });
 
-        // Set a higher view point to see more of the globe
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
-          orientation: {
-            heading: 0.0,
-            pitch: -Cesium.Math.PI_OVER_TWO,
-            roll: 0.0
+        viewer.screenSpaceEventHandler.setInputAction(function(click) {
+          const pickedObject = viewer.scene.pick(click.position);
+          if (Cesium.defined(pickedObject)) {
+            const entity = pickedObject.id;
+            if (entity && entity.position && entity.point) {
+              // Find publications for this location
+              const lon = Cesium.Math.toDegrees(entity.position.getValue(viewer.clock.currentTime)).longitude;
+              const lat = Cesium.Math.toDegrees(entity.position.getValue(viewer.clock.currentTime)).latitude;
+              
+              const locationKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+              const publications = locationToPublications[locationKey];
+              
+              if (publications && publications.length > 0) {
+                // Show info box with publication titles
+                const titles = publications.map(pub => pub.title).join('<br>');
+                viewer.selectedEntity = entity;
+                viewer.infoBox.viewModel.description = `<strong>Publications:</strong><br>${titles}`;
+                
+                // Highlight corresponding table rows
+                const tableRows = document.querySelectorAll('#publications-table tbody tr');
+                tableRows.forEach(row => row.classList.remove('highlight'));
+                
+                publications.forEach(pub => {
+                  const index = publicationsData.findIndex(p => p.title === pub.title);
+                  if (index >= 0 && tableRows[index]) {
+                    tableRows[index].classList.add('highlight');
+                    tableRows[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  }
+                });
+              }
+            }
           }
-        });
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         fetchPublications(viewer);
       } catch (error) {
@@ -127,6 +148,19 @@
             outlineWidth: 2,
             verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
             pixelOffset: new Cesium.Cartesian2(0, -5)
+          }
+        });
+
+        locationToPublications = {};
+        publicationsData.forEach(pub => {
+          if (pub.location && connectionLookup[pub.location]) {
+            const to = connectionLookup[pub.location];
+            const locationKey = `${to.lat.toFixed(2)},${to.lon.toFixed(2)}`;
+            
+            if (!locationToPublications[locationKey]) {
+              locationToPublications[locationKey] = [];
+            }
+            locationToPublications[locationKey].push(pub);
           }
         });
 
