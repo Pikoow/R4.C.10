@@ -59,11 +59,22 @@
   </table>
 
   <script>
+    // Store publications data globally
+    let publicationsData = [];
+    let locationToPublications = {};
+
     async function initializeCesium() {
+      // Ensure Cesium is loaded
+      if (!Cesium || !Cesium.createWorldTerrainAsync) {
+        console.error('Cesium is not properly loaded.');
+        return;
+      }
+
       try {
         const terrainProvider = await Cesium.createWorldTerrainAsync();
         const viewer = new Cesium.Viewer('cesiumContainer', {
           terrainProvider: terrainProvider,
+          // Disable some features for better performance
           sceneModePicker: false,
           baseLayerPicker: false,
           navigationHelpButton: false,
@@ -72,6 +83,17 @@
           fullscreenButton: false
         });
 
+        // Set a higher view point to see more of the globe
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
+          orientation: {
+            heading: 0.0,
+            pitch: -Cesium.Math.PI_OVER_TWO,
+            roll: 0.0
+          }
+        });
+
+        // Set up click handler
         viewer.screenSpaceEventHandler.setInputAction(function(click) {
           const pickedObject = viewer.scene.pick(click.position);
           if (Cesium.defined(pickedObject)) {
@@ -98,6 +120,7 @@
                   const index = publicationsData.findIndex(p => p.title === pub.title);
                   if (index >= 0 && tableRows[index]) {
                     tableRows[index].classList.add('highlight');
+                    // Scroll to the row
                     tableRows[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                   }
                 });
@@ -113,11 +136,10 @@
     }
 
     async function fetchPublications(viewer) {
-      let id = 0;
       try {
         const pubsResponse = await fetch('Projet/Json/publications.json');
         if (!pubsResponse.ok) throw new Error('Failed to fetch publications');
-        const publications = await pubsResponse.json();
+        publicationsData = await pubsResponse.json();
 
         const connResponse = await fetch('Projet/Json/connections.json');
         if (!connResponse.ok) throw new Error('Failed to fetch connections');
@@ -133,7 +155,9 @@
           connectionLookup[conn.location] = conn.to;
         });
 
+        // Add IRISA location
         viewer.entities.add({
+          name: "IRISA",
           position: Cesium.Cartesian3.fromDegrees(irisaCoords.lon, irisaCoords.lat),
           point: {
             pixelSize: 10,
@@ -151,6 +175,7 @@
           }
         });
 
+        // Group publications by location
         locationToPublications = {};
         publicationsData.forEach(pub => {
           if (pub.location && connectionLookup[pub.location]) {
@@ -164,7 +189,8 @@
           }
         });
 
-        for (const pub of publications) {
+        // Add table rows and map points
+        for (const pub of publicationsData) {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${pub.title || 'N/A'}</td>
@@ -177,12 +203,12 @@
           tableBody.appendChild(row);
           
           if (pub.location && connectionLookup[pub.location]) {
-            drawConnection(viewer, irisaCoords, connectionLookup[pub.location]);
-            id++;
+            const to = connectionLookup[pub.location];
+            drawConnection(viewer, irisaCoords, to);
           }
-
-          console.log("C'est bon !");
         }
+
+        console.log("Data loaded successfully!");
       } catch (error) {
         console.error('Error:', error);
         alert('Failed to load data. Please try again.');
@@ -190,25 +216,30 @@
     }
 
     function drawConnection(viewer, from, to) {
+      const locationKey = `${to.lat.toFixed(2)},${to.lon.toFixed(2)}`;
+      const publications = locationToPublications[locationKey];
+      const titles = publications ? publications.map(pub => pub.title).join('\n') : '';
+      
+      viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
+        name: titles,
+        point: {
+          pixelSize: 5,
+          color: Cesium.Color.CYAN.withAlpha(0.7),
+          outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
+          outlineWidth: 0.5
+        }
+      });
+
       viewer.entities.add({
         polyline: {
           positions: Cesium.Cartesian3.fromDegreesArray([
             from.lon, from.lat,
             to.lon, to.lat
           ]),
-          width: 0.5,  // Thinner lines
-          material: Cesium.Color.YELLOW.withAlpha(0.3),  // More transparent
+          width: 0.5,
+          material: Cesium.Color.YELLOW.withAlpha(0.3),
           arcType: Cesium.ArcType.GEODESIC
-        }
-      });
-
-      viewer.entities.add({
-        position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
-        point: {
-          pixelSize: 3,  // Smaller points
-          color: Cesium.Color.CYAN.withAlpha(0.7),  // Semi-transparent
-          outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
-          outlineWidth: 0.5
         }
       });
     }
