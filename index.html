@@ -113,11 +113,9 @@
 
         const irisaCoords = { lat: 48.11653156616513, lon: -1.6397623029868635 };
 
-        // Create a lookup for connections by coordinates
         const connectionLookup = {};
         connections.forEach(conn => {
-          const key = `${conn.to.lat},${conn.to.lon}`;
-          connectionLookup[key] = conn;
+          connectionLookup[conn.location] = conn.to;
         });
 
         // Create a lookup for publications by location
@@ -162,16 +160,9 @@
           `;
           tableBody.appendChild(row);
           
-          if (pub.location && publicationsByLocation[pub.location]) {
-            // Find the connection for this location
-            const locationPubs = publicationsByLocation[pub.location];
-            const firstPub = locationPubs[0];
-            const connection = connections.find(c => c.location === firstPub.location);
-            
-            if (connection) {
-              drawConnection(viewer, irisaCoords, connection, locationPubs);
-              id++;
-            }
+          if (pub.location && connectionLookup[pub.location]) {
+            drawConnection(viewer, irisaCoords, connectionLookup[pub.location], publicationsByLocation[pub.location]);
+            id++;
           }
         }
       } catch (error) {
@@ -180,9 +171,7 @@
       }
     }
 
-    function drawConnection(viewer, from, connection, publications) {
-      const to = connection.to;
-      
+    function drawConnection(viewer, from, to, publications) {
       // Add the connection line
       viewer.entities.add({
         polyline: {
@@ -212,7 +201,7 @@
           outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
           outlineWidth: 0.5
         },
-        name: `Location: ${connection.location}`,  // Use the human-readable location name
+        name: `Location: ${location}`,
         description: description
       });
     }
