@@ -26,6 +26,8 @@
     }
     th {
       background-color: #f4f4f4;
+      position: sticky;
+      top: 0;
     }
     a {
       color: #007BFF;
@@ -38,6 +40,14 @@
       font-family: Arial, sans-serif;
       font-size: 14px;
       padding: 10px;
+    }
+    .highlighted {
+      background-color: #fffacd;
+      transition: background-color 0.3s;
+    }
+    .location-header {
+      background-color: #e6f7ff;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -60,6 +70,12 @@
   </table>
 
   <script>
+    // Global variables to store publications data
+    let allPublications = [];
+    let publicationsByLocation = {};
+    let viewer;
+    let currentlyHighlighted = [];
+
     async function initializeCesium() {
       // Ensure Cesium is loaded
       if (!Cesium || !Cesium.createWorldTerrainAsync) {
@@ -69,16 +85,15 @@
 
       try {
         const terrainProvider = await Cesium.createWorldTerrainAsync();
-        const viewer = new Cesium.Viewer('cesiumContainer', {
+        viewer = new Cesium.Viewer('cesiumContainer', {
           terrainProvider: terrainProvider,
-          // Disable some features for better performance
           sceneModePicker: false,
           baseLayerPicker: false,
           navigationHelpButton: false,
           animation: false,
           timeline: false,
           fullscreenButton: false,
-          infoBox: true // Ensure info box is enabled
+          infoBox: true
         });
 
         // Set a higher view point to see more of the globe
@@ -91,18 +106,25 @@
           }
         });
 
-        fetchPublications(viewer);
+        // Add handler for info box events
+        viewer.infoBox.frame.sandbox = "allow-same-origin allow-top-navigation allow-pointer-lock allow-popups allow-forms allow-scripts";
+        viewer.infoBox.viewModel.cameraClicked.addEventListener(function() {
+          viewer.camera.flyTo({
+            destination: viewer.infoBox.viewModel.cameraPosition
+          });
+        });
+
+        fetchPublications();
       } catch (error) {
         console.error('Error initializing Cesium:', error);
       }
     }
 
-    async function fetchPublications(viewer) {
-      let id = 0;
+    async function fetchPublications() {
       try {
         const pubsResponse = await fetch('Projet/Json/publications.json');
         if (!pubsResponse.ok) throw new Error('Failed to fetch publications');
-        const publications = await pubsResponse.json();
+        allPublications = await pubsResponse.json();
 
         const connResponse = await fetch('Projet/Json/connections.json');
         if (!connResponse.ok) throw new Error('Failed to fetch connections');
@@ -113,14 +135,9 @@
 
         const irisaCoords = { lat: 48.11653156616513, lon: -1.6397623029868635 };
 
-        const connectionLookup = {};
-        connections.forEach(conn => {
-          connectionLookup[conn.location] = conn.to;
-        });
-
         // Create a lookup for publications by location
-        const publicationsByLocation = {};
-        publications.forEach(pub => {
+        publicationsByLocation = {};
+        allPublications.forEach(pub => {
           if (pub.location) {
             if (!publicationsByLocation[pub.location]) {
               publicationsByLocation[pub.location] = [];
@@ -148,30 +165,91 @@
           }
         });
 
-        for (const pub of publications) {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${pub.title || 'N/A'}</td>
-            <td>${(pub.authors || []).join(', ') || 'N/A'}</td>
-            <td>${pub.conference || pub.journal || 'N/A'}</td>
-            <td>${pub.year || 'N/A'}</td>
-            <td>${pub.location || 'N/A'}</td>
-            <td>${pub.uri ? `<a href="${pub.uri}" target="_blank">View</a>` : 'N/A'}</td>
-          `;
-          tableBody.appendChild(row);
-          
-          if (pub.location && connectionLookup[pub.location]) {
-            drawConnection(viewer, irisaCoords, connectionLookup[pub.location], publicationsByLocation[pub.location]);
-            id++;
+        // Create a lookup for connections by location
+        const connectionsByLocation = {};
+        connections.forEach(conn => {
+          connectionsByLocation[conn.location] = conn;
+        });
+
+        // Render all publications in the table
+        renderAllPublications();
+
+        // Add connections and points for each unique location
+        Object.keys(publicationsByLocation).forEach(location => {
+          if (connectionsByLocation[location]) {
+            drawConnection(viewer, irisaCoords, connectionsByLocation[location], publicationsByLocation[location]);
           }
-        }
+        });
+
       } catch (error) {
         console.error('Error:', error);
         alert('Failed to load data. Please try again.');
       }
     }
 
-    function drawConnection(viewer, from, to, publications) {
+    function renderAllPublications() {
+      const tableBody = document.querySelector('#publications-table tbody');
+      tableBody.innerHTML = '';
+      
+      // Render all publications
+      allPublications.forEach(pub => {
+        const row = document.createElement('tr');
+        row.dataset.location = pub.location || '';
+        row.innerHTML = `
+          <td>${pub.title || 'N/A'}</td>
+          <td>${(pub.authors || []).join(', ') || 'N/A'}</td>
+          <td>${pub.conference || pub.journal || 'N/A'}</td>
+          <td>${pub.year || 'N/A'}</td>
+          <td>${pub.location || 'N/A'}</td>
+          <td>${pub.uri ? `<a href="${pub.uri}" target="_blank">View</a>` : 'N/A'}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function highlightPublications(location) {
+      // Remove previous highlights
+      currentlyHighlighted.forEach(row => {
+        row.classList.remove('highlighted');
+      });
+      currentlyHighlighted = [];
+
+      // Remove any existing location headers
+      document.querySelectorAll('.location-header').forEach(el => el.remove());
+
+      const tableBody = document.querySelector('#publications-table tbody');
+      const rows = Array.from(tableBody.querySelectorAll('tr'));
+      
+      if (!location) {
+        // If no location specified, return to original order
+        renderAllPublications();
+        return;
+      }
+
+      // Filter and highlight matching publications
+      const matchingRows = rows.filter(row => row.dataset.location === location);
+      
+      if (matchingRows.length > 0) {
+        // Create a location header
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'location-header';
+        headerRow.innerHTML = `
+          <td colspan="6">Publications from ${location}</td>
+        `;
+        tableBody.insertBefore(headerRow, tableBody.firstChild);
+        
+        // Highlight and move matching rows to top
+        matchingRows.forEach(row => {
+          row.classList.add('highlighted');
+          tableBody.insertBefore(row, headerRow.nextSibling);
+          currentlyHighlighted.push(row);
+        });
+      }
+    }
+
+    function drawConnection(viewer, from, connection, publications) {
+      const to = connection.to;
+      
       // Add the connection line
       viewer.entities.add({
         polyline: {
@@ -193,17 +271,30 @@
       description += '</ul></div>';
 
       // Add the point with clickable info
-      viewer.entities.add({
+      const pointEntity = viewer.entities.add({
         position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
         point: {
-          pixelSize: 6,  // Slightly larger for better clickability
+          pixelSize: 8,
           color: Cesium.Color.CYAN.withAlpha(0.7),
           outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
           outlineWidth: 0.5
         },
-        name: `Location: ${to.lat.toFixed(4)}, ${to.lon.toFixed(4)}`,
+        name: `Location: ${connection.location}`,
         description: description
       });
+
+      // Add click handler to highlight publications
+      pointEntity.clickHandler = viewer.screenSpaceEventHandler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      viewer.screenSpaceEventHandler.setInputAction(function(movement) {
+        const pickedObject = viewer.scene.pick(movement.position);
+        if (Cesium.defined(pickedObject)) {
+          if (pickedObject.id === pointEntity) {
+            highlightPublications(connection.location);
+          }
+        } else {
+          highlightPublications(null); // Reset if clicking elsewhere
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 
     document.addEventListener('DOMContentLoaded', initializeCesium);
