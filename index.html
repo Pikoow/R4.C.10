@@ -65,17 +65,30 @@
       try {
         const terrainProvider = await Cesium.createWorldTerrainAsync();
         const viewer = new Cesium.Viewer('cesiumContainer', {
-          terrainProvider: terrainProvider
+          terrainProvider: terrainProvider,
+          // Disable some features for better performance
+          sceneModePicker: false,
+          baseLayerPicker: false,
+          navigationHelpButton: false,
+          animation: false,
+          timeline: false,
+          fullscreenButton: false
+        });
+
+        // Set a higher view point to see more of the globe
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
+          orientation: {
+            heading: 0.0,
+            pitch: -Cesium.Math.PI_OVER_TWO,
+            roll: 0.0
+          }
         });
 
         fetchPublications(viewer);
       } catch (error) {
         console.error('Error initializing Cesium:', error);
       }
-    }
-
-    function delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     async function fetchPublications(viewer) {
@@ -97,6 +110,24 @@
         const connectionLookup = {};
         connections.forEach(conn => {
           connectionLookup[conn.location] = conn.to;
+        });
+
+        viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(irisaCoords.lon, irisaCoords.lat),
+          point: {
+            pixelSize: 10,
+            color: Cesium.Color.RED,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 1
+          },
+          label: {
+            text: "IRISA",
+            font: '12pt sans-serif',
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -5)
+          }
         });
 
         for (const pub of publications) {
@@ -131,16 +162,19 @@
             from.lon, from.lat,
             to.lon, to.lat
           ]),
-          width: 2,
-          material: Cesium.Color.RED.withAlpha(0.7)
+          width: 0.5,  // Thinner lines
+          material: Cesium.Color.YELLOW.withAlpha(0.3),  // More transparent
+          arcType: Cesium.ArcType.GEODESIC
         }
       });
 
       viewer.entities.add({
         position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
         point: {
-          pixelSize: 8,
-          color: Cesium.Color.BLUE
+          pixelSize: 3,  // Smaller points
+          color: Cesium.Color.CYAN.withAlpha(0.7),  // Semi-transparent
+          outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
+          outlineWidth: 0.5
         }
       });
     }
