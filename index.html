@@ -161,8 +161,14 @@
           tableBody.appendChild(row);
           
           if (pub.location && connectionLookup[pub.location]) {
-            drawConnection(viewer, irisaCoords, connectionLookup[pub.location], publicationsByLocation[pub.location]);
-            id++;
+            const locationPubs = publicationsByLocation[pub.location];
+            const firstPub = locationPubs[0];
+            const connection = connections.find(c => c.location === firstPub.location);
+
+            if (connection) {
+              drawConnection(viewer, irisaCoords, connection, locationPubs);
+              id++;
+            }
           }
         }
       } catch (error) {
@@ -171,7 +177,9 @@
       }
     }
 
-    function drawConnection(viewer, from, to, publications) {
+    function drawConnection(viewer, from, connection, publications) {
+      const to = connection.to;
+
       // Add the connection line
       viewer.entities.add({
         polyline: {
