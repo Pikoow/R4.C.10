@@ -71,24 +71,13 @@
         const terrainProvider = await Cesium.createWorldTerrainAsync();
         const viewer = new Cesium.Viewer('cesiumContainer', {
           terrainProvider: terrainProvider,
-          // Disable some features for better performance
           sceneModePicker: false,
           baseLayerPicker: false,
           navigationHelpButton: false,
           animation: false,
           timeline: false,
           fullscreenButton: false,
-          infoBox: true // Ensure info box is enabled
-        });
-
-        // Set a higher view point to see more of the globe
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
-          orientation: {
-            heading: 0.0,
-            pitch: -Cesium.Math.PI_OVER_TWO,
-            roll: 0.0
-          }
+          infoBox: true
         });
 
         fetchPublications(viewer);
@@ -118,7 +107,6 @@
           connectionLookup[conn.location] = conn.to;
         });
 
-        // Create a lookup for publications by location
         const publicationsByLocation = {};
         publications.forEach(pub => {
           if (pub.location) {
@@ -129,7 +117,6 @@
           }
         });
 
-        // Add IRISA point
         viewer.entities.add({
           position: Cesium.Cartesian3.fromDegrees(irisaCoords.lon, irisaCoords.lat),
           point: {
@@ -180,7 +167,6 @@
     function drawConnection(viewer, from, connection, publications) {
       const to = connection.to;
 
-      // Add the connection line
       viewer.entities.add({
         polyline: {
           positions: Cesium.Cartesian3.fromDegreesArray([
@@ -193,18 +179,16 @@
         }
       });
 
-      // Create HTML content for the info box
       let description = '<div><strong>Publications at this location:</strong><ul>';
       publications.forEach(pub => {
         description += `<li>${pub.title || 'Untitled'} (${pub.year || 'Unknown year'})</li>`;
       });
       description += '</ul></div>';
 
-      // Add the point with clickable info
       viewer.entities.add({
         position: Cesium.Cartesian3.fromDegrees(to.lon, to.lat),
         point: {
-          pixelSize: 6,  // Slightly larger for better clickability
+          pixelSize: 6,
           color: Cesium.Color.CYAN.withAlpha(0.7),
           outlineColor: Cesium.Color.WHITE.withAlpha(0.3),
           outlineWidth: 0.5
