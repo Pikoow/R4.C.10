@@ -23,19 +23,6 @@ const latexToUnicode = {
   "{\\'u}": "ú",
   "{\\^u}": "û",
   "{\\~u}": "ũ",
-  "{\\c{c}}": "ç",
-  "{\\ss}": "ß",
-  "{\\o}": "ø",
-  "{\\O}": "Ø",
-  "{\\ae}": "æ",
-  "{\\AE}": "Æ",
-  "{\\oe}": "œ",
-  "{\\OE}": "Œ",
-  "{\\aa}": "å",
-  "{\\AA}": "Å",
-  "{\\l}": "ł",
-  "{\\L}": "Ł",
-  // Add more mappings as needed
 };
 
 function replaceLatexSpecialChars(bibtexEntry) {
@@ -76,7 +63,6 @@ async function fetchPublicationsIrisa() {
     });
   }
 
-  // Save the publications to a JSON file
   fs.writeFileSync('publications.json', JSON.stringify(publications, null, 2));
   console.log('Publications saved to publications.json');
 }
